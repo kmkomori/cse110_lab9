@@ -8,10 +8,13 @@
   <title>Lab 9</title>
 
   <!-- TrackJS Integration (replace with your token) -->
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
   <script>
-    window._trackJs = { token: '233d528c871f411bb81b8f1d366447d6' };
+    window.TrackJS && TrackJS.install({ 
+      token: "233d528c871f411bb81b8f1d366447d6"
+      // for more configuration options, see https://docs.trackjs.com
+    });
   </script>
-  <script src="https://cdn.trackjs.com/releases/current/tracker.js"></script>
 
   <!-- dummy div for demo (commented out for error demo) -->
   <!-- <div id="debug-panel">Debug info here</div> -->
