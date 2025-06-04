@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
-  
+
   <!-- dummy div for demo -->
   <!-- <div id="debug-panel">Debug info here</div> -->
 
@@ -71,7 +71,6 @@
       </fieldset>
     </form>
 
-    <!-- Add Classification for Each Button -->
     <section id="error-btns">
       <button data-action="log">Console Log</button>
       <button data-action="error">Console Error</button>
@@ -92,82 +91,117 @@
   </main>
 
   <script>
+
+    // --- Custom Error Classes ---
+
+    class CalculatorError extends Error {
+      constructor(type, message) {
+        super(message);
+        this.name = this.constructor.name;
+        this.type = type;
+      }
+    }
+
+    class ValidationError extends CalculatorError {
+      constructor(field, message) {
+        super('validation', message);
+        this.field = field; // 'first' or 'second'
+      }
+    }
+
+    class CalculationError extends CalculatorError {
+      constructor(operation) {
+        super('calculation', `Invalid operation: ${operation}`);
+        this.operation = operation;
+      }
+    }
+
+    // --- Calculator Logic ---
+
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
-      let output = document.querySelector('output');
-      let firstNum = document.querySelector('#first-num').value;
-      let secondNum = document.querySelector('#second-num').value;
-      let operator = document.querySelector('#operator').value;
+      const output = document.querySelector('output');
+      const firstNum = document.querySelector('#first-num').value;
+      const secondNum = document.querySelector('#second-num').value;
+      const operator = document.querySelector('#operator').value;
 
       try {
-        // validate inputs
-        if (firstNum === "" || secondNum === "") {
-          throw new Error("Both numbers are required!");
+        // validate inputs with custom errors
+        if (!firstNum) {
+          throw new ValidationError('first', 'First number is required');
+        }
+        if (!secondNum) {
+          throw new ValidationError('second', 'Second number is required');
         }
 
         const num1 = parseFloat(firstNum);
         const num2 = parseFloat(secondNum);
 
-        if (isNaN(num1) || isNaN(num2)) {
-          throw new Error("Invalid numbers entered!");
+        if (isNaN(num1)) {
+          throw new ValidationError('first', 'First value must be a number');
+        }
+        if (isNaN(num2)) {
+          throw new ValidationError('second', 'Second value must be a number');
         }
 
         // calculation logic
         let result;
         switch (operator) {
-          case '+':
-            result = num1 + num2;
-            break;
-          case '-':
-            result = num1 - num2;
-            break;
-          case '*':
-            result = num1 * num2;
-            break;
+          case '+': result = num1 + num2; break;
+          case '-': result = num1 - num2; break;
+          case '*': result = num1 * num2; break;
           case '/':
             if (num2 === 0) {
-              throw new Error("Division by zero is not allowed!");
+              throw new CalculationError('division-by-zero');
             }
             result = num1 / num2;
             break;
           default:
-            throw new Error("Invalid operator!");
+            throw new CalculationError('invalid-operator');
         }
 
         output.innerHTML = result;
+
       } catch (error) {
-        output.innerHTML = `Error: ${error.message}`;
-        console.error("Calculator error:", error);
+        if (error instanceof CalculatorError) {
+          console.error(`${error.name} [${error.type}]: ${error.message}`);
+          output.innerHTML = `Error: ${error.message}`;
+          // Focus the field if it's a validation error
+          if (error instanceof ValidationError) {
+            document.querySelector(`#${error.field}-num`).focus();
+          }
+        } else {
+          // Handle generic errors
+          console.error('Unexpected error:', error);
+          output.innerHTML = 'An unexpected error occurred';
+        }
       } finally {
-        console.log("Calculator operation attempted");
+        console.log("Calculation attempt completed");
       }
     });
 
-    let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
+    // --- Console Demo Buttons ---
 
-    // Start your code here
-    // You may move this JS to another file if you wish
-
-    // sample data to show functionality
-    const pgwObject = { name: "Park Gunwook", age: 20, group: "ZEROBASEONE" };
-    const dogUnion = [
+    // sample data for console demos
+    const sampleObject = { name: "Park Gunwook", age: 20, group: "ZEROBASEONE" };
+    const sampleArray = [
       { name: "Park Gunwook", age: 20 },
       { name: "Kum Junhyeon", age: 21 },
       { name: "Kim Gyuvin", age: 20 }
     ];
 
-    // map action to function
+    // map actions to functions
     const demoActions = {
-      log: () => console.log("This is a console.log demo!", pgwObject),
-      error: () => console.error("This is a console.error demo!", pgwObject),
+      log: () => console.log("This is a console.log demo!", sampleObject),
+      error: () => console.error("This is a console.error demo!", sampleObject),
       count: () => console.count("Count Button Clicked"),
-      warn: () => console.warn("This is a console.warn demo!", pgwObject),
+      warn: () => console.warn("This is a console.warn demo!", sampleObject),
       assert: () => {
-        console.assert(pgwObject.age < 18, "User is not under 18! (This WILL show)");
+        console.assert(sampleObject.age < 18, "User is not under 18! (This WILL show)");
       },
       clear: () => console.clear(),
-      dir: () => console.dir(pgwObject),
+      dir: () => console.dir(sampleObject),
       dirxml: () => console.dirxml(document.querySelector('main')),
       groupStart: () => {
         console.group("Demo Group");
@@ -176,7 +210,7 @@
         console.info("Inside group: info");
       },
       groupEnd: () => console.groupEnd(),
-      table: () => console.table(dogUnion),
+      table: () => console.table(sampleArray),
       startTimer: () => console.time("Demo Timer"),
       endTimer: () => console.timeEnd("Demo Timer"),
       trace: () => {
@@ -185,30 +219,32 @@
         function c() { console.trace("Trace Button Pressed"); }
         a();
       }
-      // excludin globalError
+      // globalError handled separately
     };
 
-    // event listener for every button
+    // attach event listeners to all console demo buttons
     document.querySelectorAll('#error-btns > button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const action = btn.getAttribute('data-action');
-        if (demoActions[action]) {
-          demoActions[action]();
-        }
-      });
+      const action = btn.getAttribute('data-action');
+      if (action !== 'globalError') {
+        btn.addEventListener('click', () => {
+          if (demoActions[action]) {
+            demoActions[action]();
+          }
+        });
+      }
     });
 
-    // try to access DOM node that doesn't exist because it's commented out
+    // --- Global Error Simulation ---
+
     document.querySelector('[data-action="globalError"]').addEventListener('click', () => {
       try {
+        // try to access DOM node that is commented out
         const debugPanel = document.querySelector('#debug-panel');
         debugPanel.textContent = "This node is commented out!";
       } catch (error) {
         console.error("Global error caught:", error);
-        throw new Error("Intentional global error triggered!", { cause: error });
       }
     });
-
   </script>
 </body>
 
