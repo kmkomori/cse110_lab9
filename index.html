@@ -68,22 +68,23 @@
       </fieldset>
     </form>
 
+    <!-- Add Classification for Each Button -->
     <section id="error-btns">
-      <button>Console Log</button>
-      <button>Console Error</button>
-      <button>Console Count</button>
-      <button>Console Warn</button>
-      <button>Console Assert</button>
-      <button>Console Clear</button>
-      <button>Console Dir</button>
-      <button>Console dirxml</button>
-      <button>Console Group Start</button>
-      <button>Console Group End</button>
-      <button>Console Table</button>
-      <button>Start Timer</button>
-      <button>End Timer</button>
-      <button>Console Trace</button>
-      <button>Trigger a Global Error</button>
+      <button data-action="log">Console Log</button>
+      <button data-action="error">Console Error</button>
+      <button data-action="count">Console Count</button>
+      <button data-action="warn">Console Warn</button>
+      <button data-action="assert">Console Assert</button>
+      <button data-action="clear">Console Clear</button>
+      <button data-action="dir">Console Dir</button>
+      <button data-action="dirxml">Console dirxml</button>
+      <button data-action="groupStart">Console Group Start</button>
+      <button data-action="groupEnd">Console Group End</button>
+      <button data-action="table">Console Table</button>
+      <button data-action="startTimer">Start Timer</button>
+      <button data-action="endTimer">End Timer</button>
+      <button data-action="trace">Console Trace</button>
+      <button data-action="globalError">Trigger a Global Error</button>
     </section>
   </main>
 
@@ -102,6 +103,56 @@
 
     // Start your code here
     // You may move this JS to another file if you wish
+
+    // sample data to show functionality
+    const pgwObject = { name: "Park Gunwook", age: 20, group: "ZEROBASEONE" };
+    const dogUnion = [
+      { name: "Park Gunwook", age: 20 },
+      { name: "Kum Junhyeon", age: 21 },
+      { name: "Kim Gyuvin", age: 20 }
+    ];
+
+    // map action to function
+    const demoActions = {
+      log: () => console.log("This is a console.log demo!", pgwObject),
+      error: () => console.error("This is a console.error demo!", pgwObject),
+      count: () => console.count("Count Button Clicked"),
+      warn: () => console.warn("This is a console.warn demo!", pgwObject),
+      assert: () => {
+        console.assert(pgwObject.age < 18, "User is not under 18! (This WILL show)");
+      },
+      clear: () => console.clear(),
+      dir: () => console.dir(pgwObject),
+      dirxml: () => console.dirxml(document.querySelector('main')),
+      groupStart: () => {
+        console.group("Demo Group");
+        console.log("Inside group: log");
+        console.warn("Inside group: warn");
+        console.info("Inside group: info");
+      },
+      groupEnd: () => console.groupEnd(),
+      table: () => console.table(dogUnion),
+      startTimer: () => console.time("Demo Timer"),
+      endTimer: () => console.timeEnd("Demo Timer"),
+      trace: () => {
+        function a() { b(); }
+        function b() { c(); }
+        function c() { console.trace("Trace Button Pressed"); }
+        a();
+      }
+      // excludin globalError
+    };
+
+    // event listener for every button
+    document.querySelectorAll('#error-btns > button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.getAttribute('data-action');
+        if (demoActions[action]) {
+          demoActions[action]();
+        }
+      });
+    });
+
   </script>
 </body>
 
