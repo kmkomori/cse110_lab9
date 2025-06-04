@@ -6,6 +6,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
+  
+  <!-- dummy div for demo -->
+  <!-- <div id="debug-panel">Debug info here</div> -->
 
   <style>
     button {
@@ -96,7 +99,49 @@
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+
+      try {
+        // validate inputs
+        if (firstNum === "" || secondNum === "") {
+          throw new Error("Both numbers are required!");
+        }
+
+        const num1 = parseFloat(firstNum);
+        const num2 = parseFloat(secondNum);
+
+        if (isNaN(num1) || isNaN(num2)) {
+          throw new Error("Invalid numbers entered!");
+        }
+
+        // calculation logic
+        let result;
+        switch (operator) {
+          case '+':
+            result = num1 + num2;
+            break;
+          case '-':
+            result = num1 - num2;
+            break;
+          case '*':
+            result = num1 * num2;
+            break;
+          case '/':
+            if (num2 === 0) {
+              throw new Error("Division by zero is not allowed!");
+            }
+            result = num1 / num2;
+            break;
+          default:
+            throw new Error("Invalid operator!");
+        }
+
+        output.innerHTML = result;
+      } catch (error) {
+        output.innerHTML = `Error: ${error.message}`;
+        console.error("Calculator error:", error);
+      } finally {
+        console.log("Calculator operation attempted");
+      }
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
@@ -151,6 +196,17 @@
           demoActions[action]();
         }
       });
+    });
+
+    // try to access DOM node that doesn't exist because it's commented out
+    document.querySelector('[data-action="globalError"]').addEventListener('click', () => {
+      try {
+        const debugPanel = document.querySelector('#debug-panel');
+        debugPanel.textContent = "This node is commented out!";
+      } catch (error) {
+        console.error("Global error caught:", error);
+        throw new Error("Intentional global error triggered!", { cause: error });
+      }
     });
 
   </script>
