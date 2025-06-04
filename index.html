@@ -7,7 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
 
-  <!-- dummy div for demo -->
+  <!-- TrackJS Integration (replace with your token) -->
+  <script>
+    window._trackJs = { token: '233d528c871f411bb81b8f1d366447d6' };
+  </script>
+  <script src="https://cdn.trackjs.com/releases/current/tracker.js"></script>
+
+  <!-- dummy div for demo (commented out for error demo) -->
   <!-- <div id="debug-panel">Debug info here</div> -->
 
   <style>
@@ -91,9 +97,28 @@
   </main>
 
   <script>
+    // --- Global error handler ---
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.log("Global error captured:", {
+        message,
+        source,
+        line: lineno,
+        column: colno,
+        error: error?.stack
+      });
+
+      // Example: send error to a server (commented out)
+      // fetch("https://mock-api.example.com/error-log", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ message, source, lineno, colno })
+      // });
+
+      // TrackJS will also capture this error if integrated
+      return true; // Prevent default browser error logging
+    };
 
     // --- Custom Error Classes ---
-
     class CalculatorError extends Error {
       constructor(type, message) {
         super(message);
@@ -117,7 +142,6 @@
     }
 
     // --- Calculator Logic ---
-
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -127,38 +151,27 @@
       const operator = document.querySelector('#operator').value;
 
       try {
-        // validate inputs with custom errors
-        if (!firstNum) {
-          throw new ValidationError('first', 'First number is required');
-        }
-        if (!secondNum) {
-          throw new ValidationError('second', 'Second number is required');
-        }
+        // Validate inputs with custom errors
+        if (!firstNum) throw new ValidationError('first', 'First number is required');
+        if (!secondNum) throw new ValidationError('second', 'Second number is required');
 
         const num1 = parseFloat(firstNum);
         const num2 = parseFloat(secondNum);
 
-        if (isNaN(num1)) {
-          throw new ValidationError('first', 'First value must be a number');
-        }
-        if (isNaN(num2)) {
-          throw new ValidationError('second', 'Second value must be a number');
-        }
+        if (isNaN(num1)) throw new ValidationError('first', 'First value must be a number');
+        if (isNaN(num2)) throw new ValidationError('second', 'Second value must be a number');
 
-        // calculation logic
+        // Calculation logic
         let result;
         switch (operator) {
           case '+': result = num1 + num2; break;
           case '-': result = num1 - num2; break;
           case '*': result = num1 * num2; break;
           case '/':
-            if (num2 === 0) {
-              throw new CalculationError('division-by-zero');
-            }
+            if (num2 === 0) throw new CalculationError('division-by-zero');
             result = num1 / num2;
             break;
-          default:
-            throw new CalculationError('invalid-operator');
+          default: throw new CalculationError('invalid-operator');
         }
 
         output.innerHTML = result;
@@ -167,12 +180,10 @@
         if (error instanceof CalculatorError) {
           console.error(`${error.name} [${error.type}]: ${error.message}`);
           output.innerHTML = `Error: ${error.message}`;
-          // Focus the field if it's a validation error
           if (error instanceof ValidationError) {
             document.querySelector(`#${error.field}-num`).focus();
           }
         } else {
-          // Handle generic errors
           console.error('Unexpected error:', error);
           output.innerHTML = 'An unexpected error occurred';
         }
@@ -182,8 +193,6 @@
     });
 
     // --- Console Demo Buttons ---
-
-    // sample data for console demos
     const sampleObject = { name: "Park Gunwook", age: 20, group: "ZEROBASEONE" };
     const sampleArray = [
       { name: "Park Gunwook", age: 20 },
@@ -191,7 +200,6 @@
       { name: "Kim Gyuvin", age: 20 }
     ];
 
-    // map actions to functions
     const demoActions = {
       log: () => console.log("This is a console.log demo!", sampleObject),
       error: () => console.error("This is a console.error demo!", sampleObject),
@@ -219,30 +227,31 @@
         function c() { console.trace("Trace Button Pressed"); }
         a();
       }
-      // globalError handled separately
     };
 
-    // attach event listeners to all console demo buttons
     document.querySelectorAll('#error-btns > button').forEach(btn => {
       const action = btn.getAttribute('data-action');
       if (action !== 'globalError') {
-        btn.addEventListener('click', () => {
-          if (demoActions[action]) {
-            demoActions[action]();
-          }
-        });
+        btn.addEventListener('click', () => demoActions[action]?.());
       }
     });
 
     // --- Global Error Simulation ---
-
     document.querySelector('[data-action="globalError"]').addEventListener('click', () => {
-      try {
-        // try to access DOM node that is commented out
+      // Randomly trigger different global errors for demo
+      const errorType = Math.floor(Math.random() * 3);
+
+      if (errorType === 0) {
+        // ReferenceError
+        nonExistentFunction();
+      } else if (errorType === 1) {
+        // TypeError
+        let x = null;
+        x.someProperty = 42;
+      } else if (errorType === 2) {
+        // DOM error: accessing a node that doesn't exist (commented out)
         const debugPanel = document.querySelector('#debug-panel');
         debugPanel.textContent = "This node is commented out!";
-      } catch (error) {
-        console.error("Global error caught:", error);
       }
     });
   </script>
